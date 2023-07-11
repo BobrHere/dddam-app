@@ -16,7 +16,7 @@ that you could find suitable for your needs. Let's see.
 ## Use Cases
 
 We will start from Use Cases.
-The type of the DUseCase is quite tricky but you only need to know about three constructor parameters. Let's see an example:
+The type of the `DUseCase` is quite tricky but you only need to know about three constructor parameters. Let's see an example:
 
 ```typescript
 const createUserUC = new DUseCase(
@@ -153,7 +153,7 @@ Then we write Use Case parameters:
 
 ![suggest parameters](./docs/suggest-use-case-params.png)
 
-Typescript surprizes us again and makes IDE suggest the type of the parameters.
+Typescript surprizes us again and makes IDE suggest the type of the parameters of the specified Use Case.
 But the parameters will be validated by anyway so you can pass any not validated data.
 
 Then the Use Case and Events will just work.  
