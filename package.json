@@ -8,6 +8,13 @@
     "/dist",
     "docs"
   ],
+  "bugs": {
+    "url": "https://github.com/BobrHere/dddam-app/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BobrHere/dddam-app.git"
+  },
   "scripts": {
     "test": "jest",
     "build": "tsc"
