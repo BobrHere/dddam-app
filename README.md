@@ -114,6 +114,75 @@ and will inform us if we make any typo. That's why `as const` for `eventName` wa
 The second one is the processing function itself. The function takes two parameters:
 the Event and `EventProcessor` dependencies. You must write types for both.
 
+## Context Container
+
+Context Container is very important part of the `DDDam-App` and a bit tricky. Maybe it's easier to show its type:
+```typescript
+export type ContextContainer<UCDeps, EPDeps> = <R>(
+    action: (ucDeps: UCDeps, epDeps: EPDeps) => Promise<R>
+) => Promise<R>;
+```
+You most implement Context Container by yourself.
+
+It's a function which only parameter is an action - a function that takes two arguments:
+Use Case dependencies and Event Processor dependencies. When Context Container is called,
+it most build those dependencies and then call the `action` with dependencies in its parameters.
+The action itself is not the concern of the Context Container
+(is's made by `DApp` and actually runs use cases and events). You free to use closures or anything you want.
+
+For example let's implement a Context Container for Repositories made by [Kysely](https://kysely.dev/) query builder:
+```typescript
+// application layer
+
+type UCDependencies = {
+    accountRepository: AccountRepository,
+}
+
+type EPDependencies = {
+    serverEmail: string,
+}
+```
+
+```typescript
+// infrastructure layer
+
+function getContextContainer(
+    mainConfig: MainConfig,
+): ContextContainer<UCDependencies, EPDependencies> {
+    const db = new Kysely<Db>({
+        dialect: new PostgresDialect({
+            pool: new Pool({
+                host: mainConfig.dbHost,
+                port: mainConfig.dbPort,
+                database: mainConfig.dbName,
+                user: mainConfig.dbUsername,
+                password: mainConfig.dbPassword,
+            }),
+        }),
+    });
+    const contextContainer = async<R>(
+        action: (ucDeps: UCDependencies, epDeps: EPDependencies) => Promise<R>
+    ) => {
+        return await db.transaction().execute(async t => {
+            const ucDeps = {
+                accountRepository: new KyselyAccountRepository(t),
+            };
+            const epDeps = {
+                serverEmail: mainConfig.serverEmail,
+            };
+            return await action(ucDeps, epDeps);
+        });
+    };
+    return contextContainer;
+}
+```
+
+Here we made `getContextContainer` function which returns our Context Container.
+`contextContainer` will always have an access to `db` by javascript closure,
+it builds `KyselyAccountRepository` and executes the `action` in the same Kysely transaction.
+
+You can implement in Context Container anything you want: `UnitOfWork`, `IdentityMap`, etc.
+
 ## Mediator
 
 And now let's combine everything!
@@ -122,7 +191,7 @@ To do it we need a simple `DApp` instance. Maybe even not one if your needs dema
 
 ```typescript
 const app = new DApp(
-    getTransactionHandler(),
+    getContextContainer(mainConfig),
     [createUserUC, deleteUserUC, postUC],
     [sendConfirmationEmailEP,
      takeDiskSpaceEP,
@@ -133,12 +202,23 @@ const app = new DApp(
 
 `DApp` constructor takes three parameters.
 
-The first one is a Transaction Handler. We'll speak about it later.
+The first one is the Context Container.
 
 The second one is an array of all Use Cases we have. Their Dependencies types most match.
 
 The third one is an array of all our Event Processors. Their Dependencies types most match too,
-but can be different from those of Use Cases.
+but are different from those of Use Cases.
+
+If you want to have different Dependencies types for Use Cases or Event Processors
+you're free to have more than one `DApp` instance:
+
+```typescript
+const [authCC, postsCC] = getManyContextContainers(mainConfig);
+
+const authApp = new DApp(authCC, authUseCases, authEventProcessors);
+
+const postsApp = new DApp(postsCC, postsUseCases, postsEventProcessors);
+```
 
 And let's see the magic!!!
 
@@ -154,13 +234,6 @@ Then we write Use Case parameters:
 ![suggest parameters](./docs/suggest-use-case-params.png)
 
 Typescript surprizes us again and makes IDE suggest the type of the parameters of the specified Use Case.
-But the parameters will be validated by anyway so you can pass any not validated data.
+But the parameters will be validated anyway so you can pass any not validated data.
 
-Then the Use Case and Events will just work.  
-
-
-
-DDDam-App takes your Use Cases and its Events then runs them by your order -
-each Use Case and its Events in a transaction with your dependencies loaded as you want.
-You must implement your own transaction handler but the convention of the library is
-that if everything is OK transaction is committed, if an exception is thrown transaction rollbacks.
+Then the Use Case and Events will just work.

@@ -18,11 +18,11 @@ export class DApp<
     private dEventProcessorsMap: DEventProcessorsMap<DEventProcessorDeps>;
 
     constructor(
-        private transactionHandler: TransactionHandler<DUseCaseDeps, DEventProcessorDeps>,
+        private contextContainer: ContextContainer<DUseCaseDeps, DEventProcessorDeps>,
         useCases: DUseCases,
         dEventProcessors: DEventProcessor<any, any, DEventProcessorDeps>[],
     ) {
-        this.transactionHandler = transactionHandler;
+        this.contextContainer = contextContainer;
         this.useCasesMap = this.createUseCasesMap(useCases);
         this.dEventProcessorsMap = this.createDEventProcessorsMap(dEventProcessors);
     }
@@ -65,7 +65,7 @@ export class DApp<
         UCResult extends UseCaseResult<UCMap, UCName>,
     >(ucName: UCName, ucParams: UCParams): Promise<UCResult> {
         const useCase = this.useCasesMap[ucName];
-        return await this.transactionHandler<UCResult>(
+        return await this.contextContainer<UCResult>(
             async(ucDeps, epDeps) => {
                 const dEventsList: DEvent<any>[] = [];
                 const dEventHandler = (dEvents: DEvent<any>[]) => {
@@ -89,8 +89,9 @@ export class DApp<
     }
 }
 
-export type TransactionHandler<UseCaseDependencies, DEventProcessorDependencies> =
-    <R>(transaction: (ucDeps: UseCaseDependencies, epDeps: DEventProcessorDependencies) => Promise<R>) => Promise<R>;
+export type ContextContainer<UCDeps, EPDeps> = <R>(
+    action: (ucDeps: UCDeps, epDeps: EPDeps) => Promise<R>
+) => Promise<R>;
 
 type DEventProcessorsMap<Dependencies> = {
     [dEventName: string]: DEventProcessor<any, any, Dependencies>[]
