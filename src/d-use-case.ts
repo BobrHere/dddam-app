@@ -2,6 +2,7 @@ import {TSchema, Static} from "@sinclair/typebox";
 import {Value} from "@sinclair/typebox/value";
 import {DEvent} from "./d-event";
 
+
 /**
  * `DUseCase` - can be used as a Command or a Query of CQRS.
  */
@@ -32,8 +33,8 @@ export class DUseCase<
         deps: Dependencies,
         dEventHandler: (dEvent: DEvent<any>[]) => void,
     ): Promise<UseCaseResult> {
-        if (Value.Check(this.paramsSchema, params)) {
-
+        if (!Value.Check(this.paramsSchema, params)) {
+            throw new ValidationError(params, this.paramsSchema);
         }
         return await this.useCaseFunc(params, deps, dEventHandler);
     }
