@@ -1,5 +1,5 @@
 import {TSchema, Static} from "@sinclair/typebox";
-import {Value} from "@sinclair/typebox/value";
+import {Value, ValueError} from "@sinclair/typebox/value";
 import {DEvent} from "./d-event";
 
 
@@ -33,8 +33,9 @@ export class DUseCase<
         deps: Dependencies,
         dEventHandler: (dEvent: DEvent<any>[]) => void,
     ): Promise<UseCaseResult> {
-        if (!Value.Check(this.paramsSchema, params)) {
-            throw new ValidationError(params, this.paramsSchema);
+        const errors = [...Value.Errors(this.paramsSchema, params)];
+        if (errors.length > 0) {
+            throw new ValidationError(params, this.paramsSchema, errors);
         }
         return await this.useCaseFunc(params, deps, this.useCaseName, dEventHandler);
     }
@@ -48,11 +49,11 @@ type UseCaseFunc<UseCaseName extends string, UseCaseParams, Dependencies, UseCas
 ) => Promise<UseCaseResult>;
 
 export class ValidationError extends Error {
-    constructor(readonly value: any, readonly schema: TSchema) {
-        const valueStr = JSON.stringify(value);
-        const schemaStr = JSON.stringify(schema);
-        super(`validation error. value: ${valueStr}, schema: ${schemaStr}`);
-        this.value = value;
-        this.schema = schema;
+    constructor(
+        readonly value: any,
+        readonly schema: TSchema,
+        readonly errors: ValueError[],
+    ) {
+        super(`Data Validation error`);
     }
 }

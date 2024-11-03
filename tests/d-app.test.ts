@@ -1,5 +1,5 @@
 import { Type } from "@sinclair/typebox"
-import {DApp, DEvent, DEventProcessor, DUseCase} from "../src"
+import {DApp, DEvent, DEventProcessor, DUseCase, ValidationError} from "../src"
 
 class User {
     events: DEvent<any>[];
@@ -121,5 +121,17 @@ describe("test DApp", () => {
         await app.run("create user", {username: "albo", password: "ololol"});
 
         expect(addedUsers).toBe(1);
+    });
+
+    test("test command verification error", async () => {
+        let error: ValidationError;
+        try {
+            await app.run("create user", {username: "albo"} as any);
+        } catch (e) {
+            error = e;
+        }
+        expect(error).toBeInstanceOf(ValidationError);
+        expect(error.errors).not.toHaveLength(0);
+        console.log(`errors: ${JSON.stringify(error.errors, null, 2)}`);
     });
 })
