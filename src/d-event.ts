@@ -1,5 +1,5 @@
 /**
- * DomainEventProcessor - Processes a `DEvent`. Mostn't be used separately, only by `DApp`.
+ * DomainEventProcessor - Processes a `DEvent`. Mustn't be used separately, only by `DApp`.
  */
 export class DEventProcessor<DEName extends string, DE extends DEvent<DEName>, Dependencies> {
     constructor(

@@ -16,7 +16,7 @@ that you could find suitable for your needs. Let's see.
 ## Use Cases
 
 We will start from Use Cases.
-The type of the `DUseCase` is quite tricky but you only need to know about three constructor parameters. Let's see an example:
+The type of the `DUseCase` is quite tricky but you only need to know about the three constructor parameters. Let's see an example:
 
 ```typescript
 const createUserUC = new DUseCase(
@@ -28,8 +28,8 @@ const createUserUC = new DUseCase(
         age: Type.Optional(Type.Number()),
         status: Type.Optional(Type.String()),
     }),
-    async(params, deps: Dependencies, handleDEvent) => {
-        console.log("create user...");
+    async(params, deps: Dependencies, useCaseName, handleDEvent) => {
+        console.log(`${useCaseName}...`);
         const user = new User(
             params.username,
             deps.passwordService.hashPassword(params.password),
@@ -55,10 +55,11 @@ So I decided to use Typebox: it's simple, statically typed and easily converted 
 which is quite common and could be used by many Presentation layer frameworks,
 so this third-party library shouldn't corrupt our Application layer.
 
-The third parameter is the Use Case function itself. It takes three parameters:
+The third parameter is the Use Case function itself. It takes four parameters:
 - The Use Case parameters which has static type from the Typebox schema.
 - Then the Use Case dependencies - the explicit type, as you see, is required here,
 because the Use Case can't know what you want.
+- Then the Use Case name - the name you put for your Use Case so you don't write it twice if there is a need for it.
 - The last one is eventHandler function. If you have events just give them to this handler.
 
 ## Events

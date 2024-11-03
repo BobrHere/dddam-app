@@ -21,7 +21,7 @@ export class DUseCase<
     constructor(
         readonly useCaseName: UseCaseName,
         readonly paramsSchema: ParamsSchema,
-        private useCaseFunc: UseCaseFunc<Static<ParamsSchema>, Dependencies, UseCaseResult>,
+        private useCaseFunc: UseCaseFunc<UseCaseName, Static<ParamsSchema>, Dependencies, UseCaseResult>,
     ) {
         this.useCaseName = useCaseName;
         this.paramsSchema = paramsSchema;
@@ -36,13 +36,14 @@ export class DUseCase<
         if (!Value.Check(this.paramsSchema, params)) {
             throw new ValidationError(params, this.paramsSchema);
         }
-        return await this.useCaseFunc(params, deps, dEventHandler);
+        return await this.useCaseFunc(params, deps, this.useCaseName, dEventHandler);
     }
 }
 
-type UseCaseFunc<UseCaseParams, Dependencies, UseCaseResult> = (
+type UseCaseFunc<UseCaseName extends string, UseCaseParams, Dependencies, UseCaseResult> = (
     params: UseCaseParams,
     deps: Dependencies,
+    useCaseName: UseCaseName,
     dEventHandler: (dEvent: DEvent<any>[]) => void,
 ) => Promise<UseCaseResult>;
 

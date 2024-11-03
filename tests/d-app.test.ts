@@ -59,8 +59,8 @@ describe("test DApp", () => {
             age: Type.Optional(Type.Number()),
             status: Type.Optional(Type.String()),
         }),
-        async(params, deps: Dependencies, handleDEvent) => {
-            console.log("create user...");
+        async(params, deps: Dependencies, useCaseName, handleDEvent) => {
+            console.log(`${useCaseName}...`);
             deps.userRepo.add(new User(
                 params.username,
                 "x",
@@ -76,8 +76,8 @@ describe("test DApp", () => {
         Type.Object({
             username: Type.String(),
         }),
-        async(params, deps: Dependencies, handleDEvent) => {
-            console.log("delete user...");
+        async(params, deps: Dependencies, useCaseName, handleDEvent) => {
+            console.log(`${useCaseName}...`);
             const user = deps.userRepo.get(params.username);
             if (user)
                 deps.userRepo.remove(user);
@@ -89,8 +89,8 @@ describe("test DApp", () => {
         Type.Object({
             username: Type.String(),
         }),
-        async(params, deps: Dependencies, handleDEvent) => {
-            console.log("delete user...");
+        async(params, deps: Dependencies, useCaseName, handleDEvent) => {
+            console.log(`${useCaseName}...`);
             const user = deps.userRepo.get(params.username);
             if (user)
                 deps.userRepo.remove(user);

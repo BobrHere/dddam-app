@@ -1,6 +1,6 @@
 {
   "name": "dddam-app",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Easy and strongly typed mediator for Application layer",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
